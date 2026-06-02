@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каунтдаун до Ревью - Голодные Игры</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Tahoma, Geneva, Verdana, sans-serif;
+            background: url('bg_clean.jpg') no-repeat center center fixed;
+            background-size: cover;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            position: relative;
+            z-index: 10;
+            gap: 100px;
+        }
+
+        .left-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .right-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ---- Голографическая рамка: мимикрия под фон-проекцию ---- */
+        .holo-frame {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Расходящиеся спицы-сетка, как тоннель за трибьютом на фоне */
+        .holo-frame::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 620px;
+            height: 620px;
+            transform: translate(-50%, -50%);
+            background: repeating-conic-gradient(
+                from 0deg,
+                rgba(130, 195, 235, 0.18) 0deg 0.6deg,
+                transparent 0.6deg 5deg
+            );
+            -webkit-mask: radial-gradient(circle, rgba(0,0,0,0.95) 6%, rgba(0,0,0,0.45) 28%, transparent 62%);
+            mask: radial-gradient(circle, rgba(0,0,0,0.95) 6%, rgba(0,0,0,0.45) 28%, transparent 62%);
+            animation: holoSpin 90s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes holoSpin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to   { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .tribute-photo {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            /* сине-циановый дуотон, как голограмма девушки на фоне */
+            filter: grayscale(1) contrast(1.1) brightness(1.12) sepia(1) hue-rotate(165deg) saturate(4);
+            /* тёмные участки растворяются в тёмном фоне */
+            mix-blend-mode: screen;
+            /* мягкое затухание краёв вместо жёсткого круга */
+            -webkit-mask: radial-gradient(circle, #000 48%, transparent 70%);
+            mask: radial-gradient(circle, #000 48%, transparent 70%);
+        }
+
+        /* Сканлайны поверх фото — эффект проекции */
+        .holo-scan {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(160, 215, 245, 0.10) 0px,
+                rgba(160, 215, 245, 0.10) 1px,
+                transparent 1px,
+                transparent 4px
+            );
+            mix-blend-mode: screen;
+            -webkit-mask: radial-gradient(circle, #000 48%, transparent 70%);
+            mask: radial-gradient(circle, #000 48%, transparent 70%);
+            animation: scanMove 6s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanMove {
+            from { background-position: 0 0; }
+            to   { background-position: 0 16px; }
+        }
+
+        .holo-label {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(175, 222, 247, 0.85);
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            text-shadow: 0 0 8px rgba(130, 195, 235, 0.9);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .dramatic-text {
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(185, 222, 247, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin-bottom: 40px;
+            text-align: center;
+            animation: textPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes textPulse {
+            0%, 100% {
+                transform: scale(1);
+                text-shadow: 0 0 10px rgba(185, 222, 247, 0.45), 2px 2px 4px rgba(0, 0, 0, 0.8);
+            }
+            50% {
+                transform: scale(1.05);
+                text-shadow: 0 0 18px rgba(255, 255, 255, 0.95), 2px 2px 8px rgba(255, 255, 255, 0.6);
+            }
+        }
+
+        .countdown {
+            display: flex;
+            gap: 30px;
+            color: white;
+            font-size: 3rem;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .time-value {
+            position: relative;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+            overflow: hidden;
+        }
+
+        .time-digit {
+            position: absolute;
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.8s ease;
+        }
+
+        .time-digit.falling {
+            transform: translateY(90px);
+            opacity: 0;
+        }
+
+        .time-digit.rising {
+            transform: translateY(-90px);
+            opacity: 0;
+        }
+
+        .time-digit.current {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .time-label {
+            font-size: 1rem;
+            color: #8B0000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 10px;
+        }
+
+        .lightning {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: lightning 10s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes lightning {
+            0%, 90%, 100% { opacity: 0; }
+            91%, 95% { opacity: 1; }
+        }
+
+        .fade-transition {
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out;
+        }
+
+        .fade-transition.visible {
+            opacity: 0.62;
+        }
+
+        /* Финальное состояние: длинная цитата вместо «Ревью уже скоро» */
+        .dramatic-text.finished {
+            font-size: 1.35rem;
+            font-weight: 600;
+            line-height: 1.6;
+            max-width: 640px;
+            margin-bottom: 50px;
+            transform: none;
+            animation: none;
+            text-shadow: 0 0 12px rgba(185, 222, 247, 0.45), 2px 2px 4px rgba(0, 0, 0, 0.85);
+        }
+
+        /* Фото Макана — чёткий портрет, без голо-растворения */
+        .tribute-photo.macan {
+            mix-blend-mode: normal;
+            filter: grayscale(0.12) contrast(1.05) brightness(1.02) saturate(1.05);
+            object-position: 50% 36%;
+            -webkit-mask: radial-gradient(circle, #000 52%, transparent 73%);
+            mask: radial-gradient(circle, #000 52%, transparent 73%);
+        }
+
+        .tribute-photo.macan.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="lightning"></div>
+
+    <div class="container">
+        <div class="left-content">
+            <div class="dramatic-text">Ревью уже скоро...</div>
+
+            <div class="countdown">
+                <div class="time-unit">
+                    <div class="time-value">
+                        <span class="time-digit current" id="days">00</span>
+                    </div>
+                    <div class="time-label">Дни</div>
+                </div>
+
+                <div class="time-unit">
+                    <div class="time-value">
+                        <span class="time-digit current" id="hours">00</span>
+                    </div>
+                    <div class="time-label">Часы</div>
+                </div>
+
+                <div class="time-unit">
+                    <div class="time-value">
+                        <span class="time-digit current" id="minutes">00</span>
+                    </div>
+                    <div class="time-label">Минуты</div>
+                </div>
+
+                <div class="time-unit">
+                    <div class="time-value">
+                        <span class="time-digit current" id="seconds">00</span>
+                    </div>
+                    <div class="time-label">Секунды</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-content">
+            <div class="holo-frame">
+                <img id="tributePhoto" class="tribute-photo fade-transition" src="" alt="Участник команды">
+                <div class="holo-scan"></div>
+                <div class="holo-label">DISTRICT 13</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Массив с фотографиями участников команды
+        const teamPhotos = [
+            'https://center.yandex-team.ru/api/v1/user/andysh/photo_49989/original.jpg',
+            'https://center.yandex-team.ru/api/v1/user/antoffee/photo_820403/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/mariakl5227/photo/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/dvornicked/photo_606078/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/efimweb/photo_843162/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/puzanovaira/photo/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/yurich/photo_9813/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/erfc/photo_215628/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/danilyukmary/photo_884954/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/nasta-ssea/photo_355024/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/aantonevich/photo_193193/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/dimadobudko/photo_127517/460.jpg',
+            'https://center.yandex-team.ru/api/v1/user/ikochedykov/photo/460.jpg'
+        ];
+
+        // Фото Макана — показывается, когда каунтдаун дошёл до 00:00:00
+        const macanPhoto = 'macan.jpeg';
+
+        let currentPhotoIndex = 0;
+        let photoInterval = null;
+        let finished = false;
+        const photoElement = document.getElementById('tributePhoto');
+
+        // Дата ревью: 15.06.2026 13:00 по МСК
+        const reviewDate = new Date('2020-01-01T00:00:00Z'); // 13:00 МСК = 10:00 UTC
+
+        // Создание звезд
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Смена фотографий каждые 5 секунд
+        function changePhoto() {
+            if (finished) return;
+            photoElement.classList.remove('visible');
+
+            setTimeout(() => {
+                if (finished) return;
+                currentPhotoIndex = (currentPhotoIndex + 1) % teamPhotos.length;
+                photoElement.src = teamPhotos[currentPhotoIndex];
+                photoElement.classList.add('visible');
+            }, 300);
+        }
+
+        // Каунтдаун закончился: один Макан вместо фоток команды + цитата
+        function finish() {
+            if (finished) return;
+            finished = true;
+            if (photoInterval) clearInterval(photoInterval);
+
+            photoElement.classList.remove('visible');
+            setTimeout(() => {
+                photoElement.classList.add('macan');
+                photoElement.src = macanPhoto;
+                photoElement.classList.add('visible');
+            }, 300);
+
+            const label = document.querySelector('.holo-label');
+            if (label) label.textContent = 'MACAN';
+
+            const dt = document.querySelector('.dramatic-text');
+            dt.classList.add('finished');
+            dt.textContent = '«Брат, учись по чужим примерам, живи, чтобы быть примером, сражайся, чтобы быть первым, не вздумай пробовать первым, тренируйся и делай темы».';
+        }
+
+        // Анимация смены цифры без наслоения
+        function animateDigitChange(elementId, newValue) {
+            const current = document.getElementById(elementId);
+            if (!current || current.textContent === newValue) return;
+
+            const valueBox = current.parentNode;
+
+            // Подчищаем «висящие» элементы от незавершённой прошлой анимации
+            valueBox.querySelectorAll('.time-digit.falling').forEach(node => node.remove());
+
+            // Новая цифра приходит сверху
+            const newDigit = document.createElement('span');
+            newDigit.className = 'time-digit rising';
+            newDigit.textContent = newValue;
+            valueBox.appendChild(newDigit);
+
+            // Принудительный reflow, чтобы стартовая позиция применилась до перехода
+            void newDigit.offsetHeight;
+
+            // Старая цифра сразу теряет id и уходит вниз
+            current.classList.remove('current');
+            current.classList.add('falling');
+            current.removeAttribute('id');
+
+            // Новая цифра становится текущей и сразу получает id
+            newDigit.classList.remove('rising');
+            newDigit.classList.add('current');
+            newDigit.id = elementId;
+
+            // Гарантированная уборка старой цифры
+            setTimeout(() => current.remove(), 800);
+        }
+
+        // Обновление каунтдауна
+        function updateCountdown() {
+            const now = new Date();
+            const timeLeft = reviewDate - now;
+
+            if (timeLeft > 0) {
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                animateDigitChange('days', days.toString().padStart(2, '0'));
+                animateDigitChange('hours', hours.toString().padStart(2, '0'));
+                animateDigitChange('minutes', minutes.toString().padStart(2, '0'));
+                animateDigitChange('seconds', seconds.toString().padStart(2, '0'));
+            } else {
+                // Ревью наступило — Макан и цитата, каунтдаун остаётся на 00:00:00
+                animateDigitChange('days', '00');
+                animateDigitChange('hours', '00');
+                animateDigitChange('minutes', '00');
+                animateDigitChange('seconds', '00');
+                finish();
+            }
+        }
+
+        // Инициализация
+        function init() {
+            createStars();
+
+            // Загружаем первую фотографию
+            photoElement.src = teamPhotos[0];
+            photoElement.classList.add('visible');
+
+            // Запускаем каунтдаун
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+
+            // Запускаем смену фотографий
+            photoInterval = setInterval(changePhoto, 5000);
+        }
+
+        // Запуск после загрузки страницы
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
