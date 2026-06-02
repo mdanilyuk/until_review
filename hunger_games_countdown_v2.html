@@ -13,7 +13,7 @@
 
         body {
             font-family: Tahoma, Geneva, Verdana, sans-serif;
-            background: url('https://pbs.twimg.com/media/GeVXG3VXAAAUAiK.jpg') no-repeat center center fixed;
+            background: url('bg_clean.jpg') no-repeat center center fixed;
             background-size: cover;
             height: 100vh;
             overflow: hidden;
@@ -245,6 +245,31 @@
         .fade-transition.visible {
             opacity: 0.62;
         }
+
+        /* Финальное состояние: длинная цитата вместо «Ревью уже скоро» */
+        .dramatic-text.finished {
+            font-size: 1.35rem;
+            font-weight: 600;
+            line-height: 1.6;
+            max-width: 640px;
+            margin-bottom: 50px;
+            transform: none;
+            animation: none;
+            text-shadow: 0 0 12px rgba(185, 222, 247, 0.45), 2px 2px 4px rgba(0, 0, 0, 0.85);
+        }
+
+        /* Фото Макана — чёткий портрет, без голо-растворения */
+        .tribute-photo.macan {
+            mix-blend-mode: normal;
+            filter: grayscale(0.12) contrast(1.05) brightness(1.02) saturate(1.05);
+            object-position: 50% 36%;
+            -webkit-mask: radial-gradient(circle, #000 52%, transparent 73%);
+            mask: radial-gradient(circle, #000 52%, transparent 73%);
+        }
+
+        .tribute-photo.macan.visible {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -313,7 +338,12 @@
             'https://center.yandex-team.ru/api/v1/user/ikochedykov/photo/460.jpg'
         ];
 
+        // Фото Макана — показывается, когда каунтдаун дошёл до 00:00:00
+        const macanPhoto = 'macan.jpeg';
+
         let currentPhotoIndex = 0;
+        let photoInterval = null;
+        let finished = false;
         const photoElement = document.getElementById('tributePhoto');
 
         // Дата ревью: 15.06.2026 13:00 по МСК
@@ -336,13 +366,36 @@
 
         // Смена фотографий каждые 5 секунд
         function changePhoto() {
+            if (finished) return;
             photoElement.classList.remove('visible');
 
             setTimeout(() => {
+                if (finished) return;
                 currentPhotoIndex = (currentPhotoIndex + 1) % teamPhotos.length;
                 photoElement.src = teamPhotos[currentPhotoIndex];
                 photoElement.classList.add('visible');
             }, 300);
+        }
+
+        // Каунтдаун закончился: один Макан вместо фоток команды + цитата
+        function finish() {
+            if (finished) return;
+            finished = true;
+            if (photoInterval) clearInterval(photoInterval);
+
+            photoElement.classList.remove('visible');
+            setTimeout(() => {
+                photoElement.classList.add('macan');
+                photoElement.src = macanPhoto;
+                photoElement.classList.add('visible');
+            }, 300);
+
+            const label = document.querySelector('.holo-label');
+            if (label) label.textContent = 'MACAN';
+
+            const dt = document.querySelector('.dramatic-text');
+            dt.classList.add('finished');
+            dt.textContent = '«Брат, учись по чужим примерам, живи, чтобы быть примером, сражайся, чтобы быть первым, не вздумай пробовать первым, тренируйся и делай темы».';
         }
 
         // Анимация смены цифры без наслоения
@@ -394,12 +447,12 @@
                 animateDigitChange('minutes', minutes.toString().padStart(2, '0'));
                 animateDigitChange('seconds', seconds.toString().padStart(2, '0'));
             } else {
-                // Ревью началось!
-                document.querySelector('.dramatic-text').textContent = 'РЕВЬЮ НАЧАЛОСЬ!';
+                // Ревью наступило — Макан и цитата, каунтдаун остаётся на 00:00:00
                 animateDigitChange('days', '00');
                 animateDigitChange('hours', '00');
                 animateDigitChange('minutes', '00');
                 animateDigitChange('seconds', '00');
+                finish();
             }
         }
 
@@ -416,7 +469,7 @@
             setInterval(updateCountdown, 1000);
 
             // Запускаем смену фотографий
-            setInterval(changePhoto, 5000);
+            photoInterval = setInterval(changePhoto, 5000);
         }
 
         // Запуск после загрузки страницы
